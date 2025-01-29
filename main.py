@@ -6,6 +6,30 @@ import plotly.express as px
 
 
 def main():
+    # Connect to database
+    conn = sqlite3.connect("national_parks.db")
+    cursor = conn.cursor()
+
+    # Create tables
+    cursor.executescript("""
+    CREATE TABLE IF NOT EXISTS parks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        url TEXT NOT NULL,
+        park_code TEXT NOT NULL,
+        state TEXT NOT NULL,
+        latitude REAL NOT NULL,
+        longitude REAL NOT NULL,
+        description TEXT NOT NULL,
+        designation TEXT NOT NULL,
+        image_url TEXT NOT NULL,
+        is_free BOOLEAN
+    );
+    """)
+
+    conn.commit()
+
+
     # Load API key
     api_key = st.secrets["API_KEY"]
 
@@ -32,6 +56,9 @@ def main():
     df["latitude"] = pd.to_numeric(df["latitude"], errors="coerce")
     df["longitude"] = pd.to_numeric(df["longitude"], errors="coerce")
     df["image_url"] = df["images"].apply(lambda x: x[0]["url"] if isinstance(x, list) and x else None)
+    
+
+    conn.close()
 
 
 if __name__ == "__main__":
