@@ -57,6 +57,26 @@ def main():
     df["longitude"] = pd.to_numeric(df["longitude"], errors="coerce")
     df["image_url"] = df["images"].apply(lambda x: x[0]["url"] if isinstance(x, list) and x else None)
     
+    # Insert data into parks table
+    df = df.rename(columns={"fullName": "name", "parkCode": "park_code", "states": "state"})
+    df.drop(columns=["images"], inplace=True)
+    df.to_sql("parks", conn, if_exists="replace", index=False)
+
+    # Query parks
+    query = """
+        SELECT
+            id,
+            name,
+            url,
+            park_code,
+            state,
+            latitude,
+            longitude,
+            image_url
+        FROM parks
+    """
+    parks_df = pd.read_sql(query, conn)
+    
 
     conn.close()
 
