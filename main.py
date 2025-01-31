@@ -78,6 +78,31 @@ def main():
     parks_df = pd.read_sql(query, conn)
     
 
+    # Dashboard
+    st.set_page_config(page_title="National Parks Explorer", layout="wide")
+    st.title("National Parks Explorer")
+
+    # Create map
+    fig = px.scatter_mapbox(
+        parks_df,
+        lat="latitude",
+        lon="longitude",
+        zoom=2.5,
+        height=600
+    )
+
+    fig.update_layout(mapbox_style="open-street-map")
+
+    fig.update_traces(
+        hovertemplate="<b style='font-size:14px;'>%{text}</b><br>"
+        + "<a href='%{customdata[0]}' target='_blank' style='font-size:12px;'>View Park Site</a>",
+        customdata=parks_df[["url"]].values,
+        text=parks_df["name"]
+    )
+
+    # Display the map
+    st.plotly_chart(fig)
+
     conn.close()
 
 
