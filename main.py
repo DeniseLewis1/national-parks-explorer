@@ -3,6 +3,7 @@ import sqlite3
 import pandas as pd
 import streamlit as st
 import plotly.express as px
+from fetch_data import *
 
 
 def main():
@@ -42,7 +43,7 @@ def main():
         name TEXT NOT NULL
     );
 
-    CREATE TABLE parks_activities (
+    CREATE TABLE IF NOT EXISTS parks_activities (
         park_id TEXT NOT NULL,
         activity_id TEXT NOT NULL,
         park_code TEXT,
@@ -51,7 +52,7 @@ def main():
         FOREIGN KEY (activity_id) REFERENCES activities(id)
     );
 
-    CREATE TABLE parks_amenities (
+    CREATE TABLE IF NOT EXISTS parks_amenities (
         park_id TEXT NOT NULL,
         amenity_id TEXT NOT NULL,
         park_code TEXT,
@@ -60,7 +61,7 @@ def main():
         FOREIGN KEY (amenity_id) REFERENCES amenities(id)
     );
 
-    CREATE TABLE parks_topics (
+    CREATE TABLE IF NOT EXISTS parks_topics (
         park_id TEXT NOT NULL,
         topic_id TEXT NOT NULL,
         park_code TEXT,
@@ -73,36 +74,8 @@ def main():
     conn.commit()
 
 
-    # Load API key
-    api_key = st.secrets["API_KEY"]
-
-    # Define the API endpoint and parameters
-    endpoint = "https://developer.nps.gov/api/v1/parks"
-
-    params = {
-        "api_key": api_key,
-        "limit": 2000
-    }
-
-    # Make the GET request
-    response = requests.get(endpoint, params=params)
-
-    # Check if the request was unsuccessful
-    if response.status_code != 200:
-        raise RuntimeError(f"Error: {response.status_code}, {response.text}")
-
-    # Store data in a dataframe
-    response_data = response.json()
-    data = response_data["data"]
-    selected_fields = ["id", "fullName", "url", "parkCode", "states", "latitude", "longitude", "description", "designation", "images"]
-    df = pd.DataFrame([{key: item[key] for key in selected_fields} for item in data])
-    df["latitude"] = pd.to_numeric(df["latitude"], errors="coerce")
-    df["longitude"] = pd.to_numeric(df["longitude"], errors="coerce")
-    df["image_url"] = df["images"].apply(lambda x: x[0]["url"] if isinstance(x, list) and x else None)
-    
     # Insert data into parks table
-    df = df.rename(columns={"fullName": "name", "parkCode": "park_code", "states": "state"})
-    df.drop(columns=["images"], inplace=True)
+    df = get_parks_data()
     df.to_sql("parks", conn, if_exists="replace", index=False)
 
     # Query parks
