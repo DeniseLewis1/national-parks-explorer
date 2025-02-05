@@ -5,6 +5,7 @@ import streamlit as st
 # Load API key
 api_key = st.secrets["API_KEY"]
 
+# Get parks data from API
 def get_parks_data():
     # Define the API endpoint and parameters
     endpoint = "https://developer.nps.gov/api/v1/parks"
@@ -33,3 +34,38 @@ def get_parks_data():
     df.drop(columns=["images"], inplace=True)
 
     return df
+
+# Get activities data from API
+def get_activities_data():
+    # Define the API endpoint and parameters
+    endpoint = "https://developer.nps.gov/api/v1/activities/parks"
+
+    params = {
+        "api_key": api_key,
+        "limit": 2000
+    }
+
+    # Make the GET request
+    response = requests.get(endpoint, params=params)
+
+    # Check if the request was unsuccessful
+    if response.status_code != 200:
+        raise RuntimeError(f"Error: {response.status_code}, {response.text}")
+
+    # Store data in a dataframe
+    response_data = response.json()
+    data = response_data["data"]
+    selected_fields = ["id", "name"]
+    activities_df = pd.DataFrame([{key: item[key] for key in selected_fields} for item in data])
+
+
+    rows = []
+    for activity in data:
+        activity_id = activity["id"]
+        for park in activity["parks"]:
+            park_code = park["parkCode"]
+            rows.append((park_code, activity_id))
+
+    parks_activites_df = pd.DataFrame(rows, columns=["park_code", "activity_id"])
+
+    return (activities_df, parks_activites_df)

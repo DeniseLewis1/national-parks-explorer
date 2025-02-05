@@ -75,8 +75,8 @@ def main():
 
 
     # Insert data into parks table
-    df = get_parks_data()
-    df.to_sql("parks", conn, if_exists="replace", index=False)
+    parks_data = get_parks_data()
+    parks_data.to_sql("parks", conn, if_exists="replace", index=False)
 
     # Query parks
     query = """
@@ -93,6 +93,8 @@ def main():
     """
     parks_df = pd.read_sql(query, conn)
     
+
+    activities_data, parks_activities_data = get_activities_data()
 
     # Dashboard
     st.set_page_config(page_title="National Parks Explorer", layout="wide")
