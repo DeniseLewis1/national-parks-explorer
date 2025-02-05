@@ -103,7 +103,15 @@ def main():
     parks_activities_data.to_sql("parks_activities", conn, if_exists="replace", index=False)
 
 
-    amenities_df, parks_amenities_df = get_amenities_data()
+    amenities_data, parks_amenities_data = get_amenities_data()
+
+    # Insert data into amenities table
+    amenities_data.to_sql("amenities", conn, if_exists="replace", index=False)
+
+    # Insert data into parks_amenities table
+    parks_amenities_data = parks_amenities_data.merge(parks_df.rename(columns={"id": "park_id"})[["park_code", "park_id"]], on="park_code", how="left")
+    parks_amenities_data.to_sql("parks_amenities", conn, if_exists="replace", index=False)
+
 
     # Dashboard
     st.set_page_config(page_title="National Parks Explorer", layout="wide")
