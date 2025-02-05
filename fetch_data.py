@@ -108,3 +108,38 @@ def get_amenities_data():
     parks_amenities_df = pd.DataFrame(rows, columns=["park_code", "amenity_id"])
 
     return (amenities_df, parks_amenities_df)
+
+# Get topics data from API
+def get_topics_data():
+    # Define the API endpoint and parameters
+    endpoint = "https://developer.nps.gov/api/v1/topics/parks"
+
+    params = {
+        "api_key": api_key,
+        "limit": 2000
+    }
+
+    # Make the GET request
+    response = requests.get(endpoint, params=params)
+
+    # Check if the request was unsuccessful
+    if response.status_code != 200:
+        raise RuntimeError(f"Error: {response.status_code}, {response.text}")
+
+    # Store data in dataframes
+    response_data = response.json()
+    data = response_data["data"]
+    selected_fields = ["id", "name"]
+    topics_df = pd.DataFrame([{key: item[key] for key in selected_fields} for item in data])
+
+
+    rows = []
+    for topic in data:
+        topic_id = topic["id"]
+        for park in topic["parks"]:
+            park_code = park["parkCode"]
+            rows.append((park_code, topic_id))
+
+    parks_topics_df = pd.DataFrame(rows, columns=["park_code", "topic_id"])
+
+    return (topics_df, parks_topics_df)

@@ -113,6 +113,9 @@ def main():
     parks_amenities_data.to_sql("parks_amenities", conn, if_exists="replace", index=False)
 
 
+    topics_data, parks_topics_data = get_topics_data()
+    
+
     # Dashboard
     st.set_page_config(page_title="National Parks Explorer", layout="wide")
     st.title("National Parks Explorer")
