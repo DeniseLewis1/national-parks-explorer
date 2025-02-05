@@ -115,6 +115,13 @@ def main():
 
     topics_data, parks_topics_data = get_topics_data()
     
+    # Insert data into topics table
+    topics_data.to_sql("topics", conn, if_exists="replace", index=False)
+
+    # Insert data into parks_topics table
+    parks_topics_data = parks_topics_data.merge(parks_df.rename(columns={"id": "park_id"})[["park_code", "park_id"]], on="park_code", how="left")
+    parks_topics_data.to_sql("parks_topics", conn, if_exists="replace", index=False)
+
 
     # Dashboard
     st.set_page_config(page_title="National Parks Explorer", layout="wide")
