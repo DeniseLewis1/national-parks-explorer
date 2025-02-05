@@ -34,8 +34,7 @@ def main():
 
     CREATE TABLE IF NOT EXISTS amenities (
         id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        categories[] TEXT NOT NULL
+        name TEXT NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS topics (
@@ -103,6 +102,8 @@ def main():
     parks_activities_data = parks_activities_data.merge(parks_df.rename(columns={"id": "park_id"})[["park_code", "park_id"]], on="park_code", how="left")
     parks_activities_data.to_sql("parks_activities", conn, if_exists="replace", index=False)
 
+
+    amenities_df, parks_amenities_df = get_amenities_data()
 
     # Dashboard
     st.set_page_config(page_title="National Parks Explorer", layout="wide")

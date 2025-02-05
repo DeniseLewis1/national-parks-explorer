@@ -52,7 +52,7 @@ def get_activities_data():
     if response.status_code != 200:
         raise RuntimeError(f"Error: {response.status_code}, {response.text}")
 
-    # Store data in a dataframe
+    # Store data in dataframes
     response_data = response.json()
     data = response_data["data"]
     selected_fields = ["id", "name"]
@@ -69,3 +69,42 @@ def get_activities_data():
     parks_activites_df = pd.DataFrame(rows, columns=["park_code", "activity_id"])
 
     return (activities_df, parks_activites_df)
+
+# Get amenities data from API
+def get_amenities_data():
+    # Define the API endpoint and parameters
+    endpoint = "https://developer.nps.gov/api/v1/amenities/parksplaces"
+
+    params = {
+        "api_key": api_key,
+        "limit": 2000
+    }
+
+    # Make the GET request
+    response = requests.get(endpoint, params=params)
+
+    # Check if the request was unsuccessful
+    if response.status_code != 200:
+        raise RuntimeError(f"Error: {response.status_code}, {response.text}")
+
+    # Store data in dataframes
+    response_data = response.json()
+    data = response_data["data"]
+
+    rows = []
+    for amenity in data:
+        id = amenity[0]["id"]
+        name = amenity[0]["name"]
+        rows.append((id, name))
+    amenities_df = pd.DataFrame(rows, columns=["id", "name"])
+
+    rows = []
+    for amenity in data:
+        amenity_id = amenity[0]["id"]
+        for park in amenity[0]["parks"]:
+            park_code = park["parkCode"]
+            rows.append((park_code, amenity_id))
+
+    parks_amenities_df = pd.DataFrame(rows, columns=["park_code", "amenity_id"])
+
+    return (amenities_df, parks_amenities_df)
