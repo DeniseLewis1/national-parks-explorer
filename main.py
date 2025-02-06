@@ -87,7 +87,8 @@ def main():
             state,
             latitude,
             longitude,
-            image_url
+            image_url,
+            is_free
         FROM parks
     """
     parks_df = pd.read_sql(query, conn)

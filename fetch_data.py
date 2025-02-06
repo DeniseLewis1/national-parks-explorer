@@ -26,14 +26,32 @@ def get_parks_data():
     response_data = response.json()
     data = response_data["data"]
     selected_fields = ["id", "fullName", "url", "parkCode", "states", "latitude", "longitude", "description", "designation", "images"]
-    df = pd.DataFrame([{key: item[key] for key in selected_fields} for item in data])
-    df["latitude"] = pd.to_numeric(df["latitude"], errors="coerce")
-    df["longitude"] = pd.to_numeric(df["longitude"], errors="coerce")
-    df["image_url"] = df["images"].apply(lambda x: x[0]["url"] if isinstance(x, list) and x else None)
-    df = df.rename(columns={"fullName": "name", "parkCode": "park_code", "states": "state"})
-    df.drop(columns=["images"], inplace=True)
+    parks_df = pd.DataFrame([{key: item[key] for key in selected_fields} for item in data])
+    parks_df["latitude"] = pd.to_numeric(parks_df["latitude"], errors="coerce")
+    parks_df["longitude"] = pd.to_numeric(parks_df["longitude"], errors="coerce")
+    parks_df["image_url"] = parks_df["images"].apply(lambda x: x[0]["url"] if isinstance(x, list) and x else None)
+    parks_df = parks_df.rename(columns={"fullName": "name", "parkCode": "park_code", "states": "state"})
+    parks_df.drop(columns=["images"], inplace=True)
 
-    return df
+   
+    endpoint = "https://developer.nps.gov/api/v1/feespasses"
+    
+    # Make the GET request
+    response = requests.get(endpoint, params=params)
+    
+    # Check if the request was unsuccessful
+    if response.status_code != 200:
+        raise RuntimeError(f"Error: {response.status_code}, {response.text}")
+    
+    # Store data in a dataframe
+    response_data = response.json()
+    data = response_data["data"]
+    selected_fields = ["parkCode", "isFeeFreePark"]
+    fees_df = pd.DataFrame([{key: item[key] for key in selected_fields} for item in data])
+
+    parks_df = parks_df.merge(fees_df.rename(columns={"parkCode": "park_code", "isFeeFreePark": "is_free"})[["park_code", "is_free"]], on="park_code", how="left")
+
+    return parks_df
 
 # Get activities data from API
 def get_activities_data():
