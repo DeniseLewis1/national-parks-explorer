@@ -41,6 +41,12 @@ def main():
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL
     );
+                         
+    CREATE TABLE IF NOT EXISTS campgrounds (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        park_code TEXT                   
+    );
 
     CREATE TABLE IF NOT EXISTS parks_activities (
         park_id TEXT NOT NULL,
@@ -122,6 +128,11 @@ def main():
     # Insert data into parks_topics table
     parks_topics_data = parks_topics_data.merge(parks_df.rename(columns={"id": "park_id"})[["park_code", "park_id"]], on="park_code", how="left")
     parks_topics_data.to_sql("parks_topics", conn, if_exists="replace", index=False)
+
+
+    # Insert data into campgrounds table
+    campgrounds_data = get_campgrounds_data()
+    campgrounds_data.to_sql("campgrounds", conn, if_exists="replace", index=False)
 
 
     # Dashboard

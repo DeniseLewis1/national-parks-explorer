@@ -161,3 +161,29 @@ def get_topics_data():
     parks_topics_df = pd.DataFrame(rows, columns=["park_code", "topic_id"])
 
     return (topics_df, parks_topics_df)
+
+# Get campgrounds data from API
+def get_campgrounds_data():
+    # Define the API endpoint and parameters
+    endpoint = "https://developer.nps.gov/api/v1/campgrounds"
+
+    params = {
+        "api_key": api_key,
+        "limit": 2000
+    }
+
+    # Make the GET request
+    response = requests.get(endpoint, params=params)
+
+    # Check if the request was unsuccessful
+    if response.status_code != 200:
+        raise RuntimeError(f"Error: {response.status_code}, {response.text}")
+
+    # Store data in a dataframe
+    response_data = response.json()
+    data = response_data["data"]
+    selected_fields = ["id", "name", "parkCode"]
+    campgrounds_df = pd.DataFrame([{key: item[key] for key in selected_fields} for item in data])
+    campgrounds_df = campgrounds_df.rename(columns={"parkCode": "park_code"})
+
+    return campgrounds_df
