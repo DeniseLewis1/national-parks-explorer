@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 import plotly.express as px
 from fetch_data import *
+from states_mapping import *
 
 
 def main():
@@ -145,7 +146,9 @@ def main():
     # State filter
     with col1:
         states = sorted(parks_df["state"].str.split(",").explode().unique())
-        selected_states = st.multiselect("Select State", states)
+        state_options = [format_state_label(state) for state in states]
+        selected_states = st.multiselect("Select State", state_options)
+        selected_states = [state.split(" - ")[0] for state in selected_states]
 
         if selected_states:
             filtered_state_park_codes = parks_df.loc[parks_df["state"].apply(lambda x: any(state in x.split(",") for state in selected_states)), "park_code"]
