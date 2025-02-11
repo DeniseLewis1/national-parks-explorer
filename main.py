@@ -139,9 +139,59 @@ def main():
     st.set_page_config(page_title="National Parks Explorer", layout="wide")
     st.title("National Parks Explorer")
 
+    col1, col2 = st.columns(2)
+    col3, col4 = st.columns(2)
+
+    # State filter
+    with col1:
+        states = sorted(parks_df["state"].str.split(",").explode().unique())
+        selected_states = st.multiselect("Select State", states)
+
+        if selected_states:
+            filtered_state_park_codes = parks_df.loc[parks_df["state"].apply(lambda x: any(state in x.split(",") for state in selected_states)), "park_code"]
+        else:
+            filtered_state_park_codes = parks_df["park_code"]
+        
+    # Activity filter
+    with col2:
+        selected_activities = st.multiselect("Select Activity", activities_data["name"])
+        
+        if selected_activities:
+            selected_activity_ids = activities_data.loc[activities_data["name"].isin(selected_activities), "id"]
+            filtered_activity_park_codes = parks_activities_data.loc[parks_activities_data["activity_id"].isin(selected_activity_ids), "park_code"]
+        else:
+            filtered_activity_park_codes = parks_df["park_code"]
+
+    # Amenity filter
+    with col3:
+        selected_amenities = st.multiselect("Select Amenity", amenities_data["name"])
+
+        if selected_amenities:
+            selected_amenity_ids = amenities_data.loc[amenities_data["name"].isin(selected_amenities), "id"]
+            filtered_amenity_park_codes = parks_amenities_data.loc[parks_amenities_data["amenity_id"].isin(selected_amenity_ids), "park_code"]
+        else:
+            filtered_amenity_park_codes = parks_df["park_code"]
+
+    # Topic filter
+    with col4:
+        selected_topics = st.multiselect("Select Topic", topics_data["name"])
+
+        if selected_topics:
+            selected_topic_ids = topics_data.loc[topics_data["name"].isin(selected_topics), "id"]
+            filtered_topic_park_codes = parks_topics_data.loc[parks_topics_data["topic_id"].isin(selected_topic_ids), "park_code"]
+        else:
+            filtered_topic_park_codes = parks_df["park_code"]
+
+
+    # Create a filtered dataframe based on filter criteria
+    filtered_park_codes = set(filtered_state_park_codes) & set(filtered_activity_park_codes) & set(filtered_amenity_park_codes) & set(filtered_topic_park_codes)
+    filtered_df = parks_df[parks_df["park_code"].isin(filtered_park_codes)]
+    print(filtered_df.shape)
+
+
     # Create map
     fig = px.scatter_mapbox(
-        parks_df,
+        filtered_df,
         lat="latitude",
         lon="longitude",
         zoom=2.5,
@@ -153,8 +203,8 @@ def main():
     fig.update_traces(
         hovertemplate="<b style='font-size:14px;'>%{text}</b><br>"
         + "<a href='%{customdata[0]}' target='_blank' style='font-size:12px;'>View Park Site</a>",
-        customdata=parks_df[["url"]].values,
-        text=parks_df["name"]
+        customdata=filtered_df[["url"]].values,
+        text=filtered_df["name"]
     )
 
     # Display the map
